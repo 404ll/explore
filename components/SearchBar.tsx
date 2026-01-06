@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,29 +7,34 @@ import { useDebounce } from '@/hooks/useDebounce';
 export default function SearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // 初始化：只在组件挂载时读取一次 URL
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '');
-  const debouncedSearch = useDebounce(searchValue, 300);
+  
+  // 防抖
+  const debouncedSearch = useDebounce(searchValue, 600);
 
-  // 当防抖后的搜索值变化时，更新 URL
+  // 监听防抖值的变化，同步到 URL
   useEffect(() => {
+    // 1. 创建一个新的 Params 对象（基于当前的 URL 参数，防止丢失 page, sort 等其他参数）
     const params = new URLSearchParams(searchParams.toString());
-    
+
+    // 2. 设置或删除 search 参数
     if (debouncedSearch) {
       params.set('search', debouncedSearch);
     } else {
       params.delete('search');
     }
-    const newUrl = `/?${params.toString()}`;
-    router.push(newUrl);
-    // 只在防抖后的搜索值变化时更新 URL，避免因为 searchParams 引用变化导致的无限循环
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, router]);
+
+    // 3. 执行导航
+    // 使用 replace 而不是 push，避免污染浏览器历史记录
+    // scroll: false 防止搜索时页面自动滚动到顶部
+    router.replace(`/?${params.toString()}`, { scroll: false });
+
+  }, [debouncedSearch, router]); 
 
   const handleClear = () => {
     setSearchValue('');
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('search');
-    router.push(`/?${params.toString()}`);
   };
 
   return (
@@ -44,7 +49,7 @@ export default function SearchBar() {
       {searchValue && (
         <button
           onClick={handleClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 px-2"
           aria-label="清除搜索"
         >
           ✕
@@ -53,4 +58,3 @@ export default function SearchBar() {
     </div>
   );
 }
-

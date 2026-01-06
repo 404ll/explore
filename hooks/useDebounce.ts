@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 
-/**
- * 自定义防抖 Hook
- * @param value 需要防抖的值
- * @param delay 延迟时间（毫秒）
- * @returns 防抖后的值
- */
+//使用T范型来支持不同类型的值
 export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
